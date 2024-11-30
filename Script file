@@ -10,7 +10,167 @@ install.packages("gplots")
 install.packages("dplyr")
 install.packages("estimatr")
 library(dplyr)
-library(plm)
 library(tidyverse)
 library(estimatr)
+
+
+# To view data:
+View(data_latin)
+
+# Description of this data and variables
+# Sample of seven (7) latin counttries for a time period that extends from 2005 to 2019. 
+# Variables
+# tfp = total factor productivity (dependent variables)
+# cc = Control of corruption index (independent variable)
+# pv = political stability index (independent variable)
+# rl = Rule of Law index (independent variable)
+# fdigdp = foreign direct investment over GDP (control variable)
+# healthgdp = total health expenditures over GDP (control variable)
+# GDPCON = GDP in constant us dolars (control variable)
+
+
+# To create natural logarithm variables
+data_latin$ln_tfp <- log(data_latin$tfp)
+data_latin$ln_fdigdp <- log(data_latin$fdigdp)
+data_latin$ln_healthgdp <- log(data_latin$healthgdp)
+data_latin$ln_gdpcon <- log(data_latin$gdpcon)
+
+# Descriptive statistics of variables
+install.packages("xtsum")
+library(xtsum)
+xtsum(
+  data_latin,
+  variables = c("tfp", "fdigdp", "cc","rl","healthgdp","gdpcon"),
+  id = "id",
+  t = "t",
+  na.rm = FALSE,
+  return.data.frame = FALSE,
+  dec = 3
+)
+
+
+# Correlation matrix 1
+install.packages("corx")
+install.packages("psych")
+library(corx)
+library(psych)
+cor_mat <- corx(data_latin, x = c(ln_tfp, cc, rl, ln_fdigdp, ln_healthgdp, ln_gdpcon), y = c(ln_tfp, cc, rl, ln_fdigdp, ln_healthgdp, ln_gdpcon),
+                round = 2, stars = c(0.001), triangle = NULL,
+                caption = "Controlling for weight" ,
+                describe = list("mean" = function(x) mean(x,na.rm=TRUE)))
+coef(cor_mat)
+
+# Correlation matrix 2
+install.packages("apaTables")
+library(apaTables)
+apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscape = TRUE, filename="ex.CorTable1.doc")
+# As you can see you can create your filename = "any name.doc" to expor the results.
+
+# Variance inflation test (VIF)
+install.packages("car")
+library(car)
+model <- lm(log(tfp) ~ cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+vif_values <- vif(model)
+vif_values
+
+## I selected the variable cc and rl. This variables show high correlations and imply a high VIF. Basically they are constructed using similar a similar approach and components leading to to a high VIF.
+## If we chance rl for pv, we can observe that the VIF is normal. The VIF theshold limit is geleraly 10 and should not exceed this value. 
+model2 <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+vif_values <- vif(model2)
+vif_values
+
+# Jarque-bera test
+install.packages("tseries")
+library(tseries)
+model <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+residuals <-residuals(model)
+jarque.bera.test(residuals)
+
+# Null hypothesis of Jarque-bera, H0: data is normally distributed
+# Considering the p-value is higher that 10% (0.1) , we cannot reject H0. Therefore the data data is normally distributed.
+
+# Wooldridge test for serial correlation in panel models
+modelAR1 <- plm(log(tfp) ~  cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"),   model = "fd")
+pwfdtest(modelAR1, type = "HC3", h0 = "fe")
+# Null hypothesis of  Wooldridge, H0: no serial correlation
+# Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from serial correlation.
+
+#  Wald heteroskedasticity  test
+install.packages("lmtest")
+library(lmtest)
+
+modelhet <- lm(log(tfp) ~ cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+wald_result <- waldtest(modelhet)
+print(wald_result)
+# Null hypothesis of Wald , H0: homoskedasticity
+# Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from heteroskedasticity.
+
+# Hausman test 
+install.packages("plm")
+install.packages("stargazer")
+
+library(plm)
 library(stargazer)
+
+fe <- plm(log(tfp) ~ cc  + pv +  log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model = "within")
+re <- plm(log(tfp) ~ cc  + pv +  log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model = "random")
+stargazer(fe, re, type="text")
+phtest(fe, re)
+
+# Considering the p-value is lower than 5% (0.05) we can reject the null hypothesis. Therefore, is a sistematic difference between coefficients.
+# If we have a p-value bellow 5% (0.05) we go with fixed effect estimation (fe). 
+
+
+# Panel OLS with fixed effect (fe) 
+# Model 1: only controlv ariables
+fe1 <- plm(log(tfp) ~  log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+# Model 2: cc only
+fe2 <- plm(log(tfp) ~ cc + log(fdigdp) + log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+# Model 3: pv only
+fe3 <- plm(log(tfp) ~ pv + log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+# Model 3: interaction (moderating effect) between cc and  log(fdigdp)
+fe4 <- plm(log(tfp) ~ cc * log(fdigdp) + log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+# Model 4: interaction (moderating effect) between pv and  log(fdigdp)
+fe5 <- plm(log(tfp) ~ pv * log(fdigdp) + log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+
+# Summary of results (the time series is included but for better visualization it was omited by the option omit=c("factor"))
+stargazer(fe1, fe2, fe3, fe4, fe5, type="text", digits = 3, omit=c("factor"))
+
+# Model 2  0.064, p-value < 0.01. In simple interpretations terms, the coeficient indicates that corruption increase total factor productivity. 
+# Model 3  0.049, p-value < 0.01. In simple interpretations terms, political stability increase total factor productivity.
+# Model 4  -0.020, p-value < 0.01. In simple interpretations terms, the relationship between corruption and fdigdp decrease total factor productivity.
+# Overall terms, when corruption interacts with fdigdp it decreases the country tfp. 
+# Model 5  -0.037, p-value < 0.01. In simple interpretations terms, the relationship between political stability and fdigdp decrease total factor productivity.
+# Overall terms, when political stability interacts with fdigdp it decreases the country tfp. 
+
+# Robustnesss test using lagged variable (tfp-1)
+install.packages("Hmisc")
+library(Hmisc)
+
+Panel <-data_latin %>% arrange(country)
+Panel$tfp <-format(data_latin$tfp, scientific = FALSE)
+Panel$l.tfp <-Lag(data_latin$tfp, + 1)
+
+Panel <-data_latin %>% arrange(country)
+Panel.pd <-pdata.frame(data_latin, index = c("country", "Time"), drop.index = FALSE)
+str(Panel.pd)
+Panel.pd$tfp <- format(Panel.pd$tfp, scientific = FALSE)
+Panel.pd$l.tfp <- as.numeric(Panel.pd$tfp)
+                             
+                             
+Panel.pd <- Panel.pd %>% group_by(country) %>% arrange(Time) %>% mutate(l.tfp = Lag(tfp, +1))
+Panel.pd$l.tfp <- as.numeric(Panel.pd$l.tfp)
+
+fe1_lag <- plm(log(l.tfp) ~ log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
+fe2_lag <- plm(log(l.tfp) ~ cc + log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
+fe3_lag <- plm(log(l.tfp) ~ pv + log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
+fe4_lag <- plm(log(l.tfp) ~ cc * log(fdigdp) +  log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
+fe5_lag <- plm(log(l.tfp) ~ pv * log(fdigdp) +log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
+stargazer(fe1_lag, fe2_lag, fe3_lag, fe4_lag, fe5_lag, type="text", digits = 3, omit=c("factor"))
+# Comparing two models we can observe that we have smilar results. Both variables remain significant and with the same signal. Thus, results seems robust with this simple application.
+stargazer(fe4, fe5, fe4_lag, fe5_lag, type="text", digits = 3, omit=c("factor"))
+
+
+
+
+
