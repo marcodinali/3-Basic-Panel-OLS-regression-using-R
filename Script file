@@ -111,6 +111,7 @@ install.packages("stargazer")
 
 library(plm)
 library(stargazer)
+# Observation: stargazer command is a simplification of the results but with better visualization like you see in articles.  
 
 fe <- plm(log(tfp) ~ cc  + pv +  log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model = "within")
 re <- plm(log(tfp) ~ cc  + pv +  log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model = "random")
@@ -171,6 +172,10 @@ stargazer(fe1_lag, fe2_lag, fe3_lag, fe4_lag, fe5_lag, type="text", digits = 3, 
 stargazer(fe4, fe5, fe4_lag, fe5_lag, type="text", digits = 3, omit=c("factor"))
 
 
-
+# Observation 1: If you want to use your lagged variables ln_tfp that you created you do not need to use  log(tfp). 
+# Of course, results will remain the same.
+fe_test_log <- plm(log(tfp) ~ log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+fe_test_ln <- plm(ln_tfp ~  ln_healthgdp + ln_gdpcon + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+stargazer(fe_test_log, fe_test_ln, type="text", digits = 3, omit=c("factor"))
 
 
