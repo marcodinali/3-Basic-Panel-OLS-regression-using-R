@@ -1,5 +1,5 @@
-# This a simple panel OS exercise for R.
-# Please, install R and R studio.
+# This a simple panel OSL for R and R Studio.
+# Please, install R and R studio first.
 # To load data you can use the link bellow or download at the main page and import by yourself. 
 
 data_latin <- read.delim("https://raw.githubusercontent.com/marcodinali/R-Exercise-Basic-OLS-/refs/heads/main/data_latin.txt", header=TRUE)
@@ -29,7 +29,7 @@ View(data_latin)
 # GDPCON = GDP in constant us dolars (control variable)
 
 
-# To create natural logarithm variables
+# To create natural logarithm of variables use the following codes:
 data_latin$ln_tfp <- log(data_latin$tfp)
 data_latin$ln_fdigdp <- log(data_latin$fdigdp)
 data_latin$ln_healthgdp <- log(data_latin$healthgdp)
@@ -38,9 +38,10 @@ data_latin$ln_gdpcon <- log(data_latin$gdpcon)
 # Descriptive statistics of variables
 install.packages("xtsum")
 library(xtsum)
+
 xtsum(
   data_latin,
-  variables = c("tfp", "fdigdp", "cc","rl","healthgdp","gdpcon"),
+  variables = c("ln_tfp", "ln_fdigdp", "cc","rl","ln_healthgdp","ln_gdpcon"),
   id = "id",
   t = "t",
   na.rm = FALSE,
@@ -54,7 +55,7 @@ install.packages("corx")
 install.packages("psych")
 library(corx)
 library(psych)
-cor_mat <- corx(data_latin, x = c(ln_tfp, cc, rl, ln_fdigdp, ln_healthgdp, ln_gdpcon), y = c(ln_tfp, cc, rl, ln_fdigdp, ln_healthgdp, ln_gdpcon),
+cor_mat <- corx(data_latin, x = c(ln_tfp, cc, pv, ln_fdigdp, ln_healthgdp, ln_gdpcon), y = c(ln_tfp, cc, rl, ln_fdigdp, ln_healthgdp, ln_gdpcon),
                 round = 2, stars = c(0.001), triangle = NULL,
                 caption = "Controlling for weight" ,
                 describe = list("mean" = function(x) mean(x,na.rm=TRUE)))
@@ -69,7 +70,7 @@ apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscap
 # Variance inflation test (VIF)
 install.packages("car")
 library(car)
-model <- lm(log(tfp) ~ cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+model <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 vif_values <- vif(model)
 vif_values
 
@@ -90,7 +91,7 @@ jarque.bera.test(residuals)
 # Considering the p-value is higher that 10% (0.1) , we cannot reject H0. Therefore the data data is normally distributed.
 
 # Wooldridge test for serial correlation in panel models
-modelAR1 <- plm(log(tfp) ~  cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"),   model = "fd")
+modelAR1 <- plm(log(tfp) ~  cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"),   model = "fd")
 pwfdtest(modelAR1, type = "HC3", h0 = "fe")
 # Null hypothesis of  Wooldridge, H0: no serial correlation
 # Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from serial correlation.
@@ -99,7 +100,7 @@ pwfdtest(modelAR1, type = "HC3", h0 = "fe")
 install.packages("lmtest")
 library(lmtest)
 
-modelhet <- lm(log(tfp) ~ cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+modelhet <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 wald_result <- waldtest(modelhet)
 print(wald_result)
 # Null hypothesis of Wald , H0: homoskedasticity
