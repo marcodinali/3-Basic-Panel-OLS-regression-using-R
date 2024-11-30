@@ -1,0 +1,16 @@
+# This a simple panel OS exercise for R.
+# Please, install R and R studio.
+# To load data you can use the link bellow or download at the main page and import by yourself. 
+
+data_latin <- read.delim("https://raw.githubusercontent.com/marcodinali/R-Exercise-Basic-OLS-/refs/heads/main/data_latin.txt", header=TRUE)
+
+# install the Following packages
+
+install.packages("gplots")
+install.packages("dplyr")
+install.packages("estimatr")
+library(dplyr)
+library(plm)
+library(tidyverse)
+library(estimatr)
+library(stargazer)
