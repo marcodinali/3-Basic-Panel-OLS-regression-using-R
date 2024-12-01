@@ -6,9 +6,11 @@ data_latin <- read.delim("https://raw.githubusercontent.com/marcodinali/R-Exerci
 
 # install the Following packages
 
-install.packages("gplots")
+install.packages("plm")
 install.packages("dplyr")
+install.packages("tidyverse")
 install.packages("estimatr")
+library(plm)
 library(dplyr)
 library(tidyverse)
 library(estimatr)
@@ -103,6 +105,9 @@ library(lmtest)
 modelhet <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 wald_result <- waldtest(modelhet)
 print(wald_result)
+
+
+
 # Null hypothesis of Wald , H0: homoskedasticity
 # Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from heteroskedasticity.
 
