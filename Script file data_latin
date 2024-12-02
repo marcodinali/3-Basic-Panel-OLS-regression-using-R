@@ -66,13 +66,13 @@ coef(cor_mat)
 # Correlation matrix 2
 install.packages("apaTables")
 library(apaTables)
-apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscape = TRUE, filename="ex.CorTable1.doc")
+# apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscape = TRUE, filename="ex.CorTable1.doc")
 # As you can see you can create your filename = "any name.doc" to expor the results.
 
 # Variance inflation test (VIF)
 install.packages("car")
 library(car)
-model <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
+model <- lm(log(tfp) ~ cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 vif_values <- vif(model)
 vif_values
 
@@ -101,23 +101,21 @@ pdwtest(log(tfp) ~  cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data =
 # Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from serial correlation.
 
 #  Wald heteroskedasticity  test
-install.packages("lmtest")
+#install.packages("lmtest")
 library(lmtest)
 
 modelhet <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 wald_result <- waldtest(modelhet)
 print(wald_result)
 
-
-
 # Null hypothesis of Wald , H0: homoskedasticity
 # Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from heteroskedasticity.
 
 # Hausman test 
-install.packages("plm")
+#install.packages("plm")
 install.packages("stargazer")
 
-library(plm)
+#library(plm)
 library(stargazer)
 # Observation: stargazer command is a simplification of the results but with better visualization like you see in articles.  
 
