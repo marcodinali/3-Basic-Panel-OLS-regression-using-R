@@ -1,11 +1,15 @@
-# This a simple panel OSL for R and R Studio.
-# Please, install R and R studio first.
-# To load data you can use the link bellow or download at the main page and import by yourself. 
+% ###############################################
+% 3-Panel-OLS fixed effect with moderated and lagged variable
+% ###############################################
+% This a simple panel OSL for R and R Studio.
+% Please, install R and R studio first.
+% To load data you can use the link bellow or download at the main page and import by yourself. 
 
 data_latin <- read.delim("https://raw.githubusercontent.com/marcodinali/R-Exercise-Basic-OLS-/refs/heads/main/data_latin.txt", header=TRUE)
 
-# install the Following packages
-
+% ###############################################
+% Install the Following packages
+% ###############################################
 install.packages("plm")
 install.packages("dplyr")
 install.packages("tidyverse")
@@ -14,30 +18,32 @@ library(plm)
 library(dplyr)
 library(tidyverse)
 library(estimatr)
+% ###############################################
 
-
-# To view data:
+% To view data:
 View(data_latin)
 
-# Description of this data and variables
-# Sample of seven (7) latin counttries for a time period that extends from 2005 to 2019. 
-# Variables
-# tfp = total factor productivity (dependent variables)
-# cc = Control of corruption index (independent variable)
-# pv = political stability index (independent variable)
-# rl = Rule of Law index (independent variable)
-# fdigdp = foreign direct investment over GDP (control variable)
-# healthgdp = total health expenditures over GDP (control variable)
-# GDPCON = GDP in constant us dolars (control variable)
+% ###############################################
+%  Description of this data and variables
+% ###############################################
+% Sample of seven (7) latin counttries for a time period that extends from 2005 to 2019. 
+% Variables
+% tfp = total factor productivity (dependent variables)
+% cc = Control of corruption index (independent variable)
+% pv = political stability index (independent variable)
+% rl = Rule of Law index (independent variable)
+% fdigdp = foreign direct investment over GDP (control variable)
+% healthgdp = total health expenditures over GDP (control variable)
+% GDPCON = GDP in constant us dolars (control variable)
 
 
-# To create natural logarithm of variables use the following codes:
+% To create natural logarithm of variables use the following codes:
 data_latin$ln_tfp <- log(data_latin$tfp)
 data_latin$ln_fdigdp <- log(data_latin$fdigdp)
 data_latin$ln_healthgdp <- log(data_latin$healthgdp)
 data_latin$ln_gdpcon <- log(data_latin$gdpcon)
 
-# Descriptive statistics of variables
+% Descriptive statistics of variables
 install.packages("xtsum")
 library(xtsum)
 
@@ -52,7 +58,7 @@ xtsum(
 )
 
 
-# Correlation matrix 1
+% Correlation matrix 1
 install.packages("corx")
 install.packages("psych")
 library(corx)
@@ -63,42 +69,42 @@ cor_mat <- corx(data_latin, x = c(ln_tfp, cc, pv, ln_fdigdp, ln_healthgdp, ln_gd
                 describe = list("mean" = function(x) mean(x,na.rm=TRUE)))
 coef(cor_mat)
 
-# Correlation matrix 2
+% Correlation matrix 2
 install.packages("apaTables")
 library(apaTables)
-# apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscape = TRUE, filename="ex.CorTable1.doc")
-# As you can see you can create your filename = "any name.doc" to expor the results.
+% apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscape = TRUE, filename="ex.CorTable1.doc")
+% As you can see you can create your filename = "any name.doc" to expor the results.
 
-# Variance inflation test (VIF)
+% Variance inflation test (VIF)
 install.packages("car")
 library(car)
 model <- lm(log(tfp) ~ cc + rl + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 vif_values <- vif(model)
 vif_values
 
-## I selected the variable cc and rl. This variables show high correlations and imply a high VIF. Basically they are constructed using similar a similar approach and components leading to to a high VIF.
-## If we chance rl for pv, we can observe that the VIF is normal. The VIF theshold limit is geleraly 10 and should not exceed this value. 
+% I selected the variable cc and rl. This variables show high correlations and imply a high VIF. Basically they are constructed using similar a similar approach and components leading to to a high VIF.
+% If we chance rl for pv, we can observe that the VIF is normal. The VIF theshold limit is geleraly 10 and should not exceed this value. 
 model2 <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 vif_values <- vif(model2)
 vif_values
 
-# Jarque-bera test
+% Jarque-bera test
 install.packages("tseries")
 library(tseries)
 model <- lm(log(tfp) ~ cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin)
 residuals <-residuals(model)
 jarque.bera.test(residuals)
 
-# Null hypothesis of Jarque-bera, H0: data is normally distributed
-# Considering the p-value is higher that 10% (0.1) , we cannot reject H0. Therefore the data data is normally distributed.
+% Null hypothesis of Jarque-bera, H0: data is normally distributed
+% Considering the p-value is higher that 10% (0.1) , we cannot reject H0. Therefore the data data is normally distributed.
 
-# Wooldridge test for serial correlation in panel models
+% Wooldridge test for serial correlation in panel models
 modelAR1 <- plm(log(tfp) ~  cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"),   model = "fd")
 pwfdtest(modelAR1, h0 = "fe")
 pdwtest(log(tfp) ~  cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model="within")
 
-# Null hypothesis of  Wooldridge, H0: no serial correlation
-# Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from serial correlation.
+% Null hypothesis of  Wooldridge, H0: no serial correlation
+% Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from serial correlation.
 
 #  Wald heteroskedasticity  test
 #install.packages("lmtest")
