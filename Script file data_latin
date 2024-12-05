@@ -155,8 +155,6 @@ print(wald_result)
 # ###############################################
 # Hausman test 
 # ###############################################
-# library(plm)
-# install.packages("plm")
 install.packages("stargazer")
 # stargazer is an R package that creates L A T EX code, HTML code and ASCII text for well-formatted regression tables, 
 with multiple models side-by-side, as well as for summary statistics tables, data frames, vectors and matrices
@@ -164,18 +162,28 @@ with multiple models side-by-side, as well as for summary statistics tables, dat
 
 library(stargazer)
 
+# library(plm)
+# install.packages("plm")
+# For more detail of this package and instructions, please visit: https://cran.r-project.org/web/packages/plm/plm.pdf
+
+# ATTENTION: If you obtain a error using only: model = "random", try: model="random", effect = "twoways". 
+# Again, for more detail and other options, please visit: https://cran.r-project.org/web/packages/plm/plm.pdf 
+# Considering the p-value is lower than 5% (0.05) we can reject the null hypothesis. Therefore, is a sistematic difference between coefficients.
+
+# Summary of results (the time series is included but for better visualization it was omited by the option omit=c("factor"))
 fe <- plm(log(tfp) ~ cc  + pv +  log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model = "within")
 re <- plm(log(tfp) ~ cc  + pv +  log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model = "random")
 stargazer(fe, re, type="text")
 phtest(fe, re)
-
-# Considering the p-value is lower than 5% (0.05) we can reject the null hypothesis. Therefore, is a sistematic difference between coefficients.
+# Interpretation 
 # If we have a p-value bellow 5% (0.05) we go with fixed effect estimation (fe). 
+
 
 # ###############################################
 # Panel OLS with fixed effect (fe) 
 # ###############################################
-# Summary of results (the time series is included but for better visualization it was omited by the option omit=c("factor"))
+
+
 
 # Model 1: only control variables
 fe1 <- plm(log(tfp) ~  log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
@@ -256,8 +264,8 @@ stargazer(fe4, fe5, fe4_lag, fe5_lag, type="text", digits = 3, omit=c("factor"))
 # ###############################################
 # Observation 1: If you want to use your lagged variables ln_tfp that you created you do not need to use  log(tfp). 
 # Of course, results will remain the same.
-fe_test_log <- plm(log(tfp) ~ log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
-fe_test_ln <- plm(ln_tfp ~  ln_healthgdp + ln_gdpcon + factor(t), data = data_latin, index = c("id", "t"),   model="within")
+fe_test_log <- plm(log(tfp) ~ log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),  model="within")
+fe_test_ln <- plm(ln_tfp ~  ln_healthgdp + ln_gdpcon + factor(t), data = data_latin, index = c("id", "t"),  model="within")
 stargazer(fe_test_log, fe_test_ln, type="text", digits = 3, omit=c("factor"))
 
 
