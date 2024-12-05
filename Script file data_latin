@@ -220,22 +220,31 @@ library(Hmisc)
 Panel <-data_latin %>% arrange(country)
 Panel$tfp <-format(data_latin$tfp, scientific = FALSE)
 Panel$l.tfp <-Lag(data_latin$tfp, + 1)
+# Panel$l.fdigdp <-Lag(data_latin$fdigdp, + 1)
 
 Panel <-data_latin %>% arrange(country)
 Panel.pd <-pdata.frame(data_latin, index = c("country", "Time"), drop.index = FALSE)
 str(Panel.pd)
 Panel.pd$tfp <- format(Panel.pd$tfp, scientific = FALSE)
 Panel.pd$l.tfp <- as.numeric(Panel.pd$tfp)
-                                                          
+
+# Panel.pd$fdigdp <- format(Panel.pd$fdigdp, scientific = FALSE)
+# Panel.pd$l.fdigdp <- as.numeric(Panel.pd$fdigdp)
+
 Panel.pd <- Panel.pd %>% group_by(country) %>% arrange(Time) %>% mutate(l.tfp = Lag(tfp, +1))
+Panel.pd <- Panel.pd %>% group_by(country) %>% arrange(Time) %>% mutate(l.fdigdp = Lag(fdigdp, +1))
+
 Panel.pd$l.tfp <- as.numeric(Panel.pd$l.tfp)
+# Panel.pd$l.fdigdp <- as.numeric(Panel.pd$l.fdigdp)
 
 # ###############################################
 # MUST READ !!!
 # ###############################################
-# Observation 1: to lag other variables just use the command bellow and change the variable "tfp" and l.tfp to other variable you wand  specific lag. 
+# Observation 1: to lag other variables just use the command bellow and change the variable "tfp" and l.tfp to other variable you want another specific lag. 
+# I ommited with # for fdigdp. You can change to other variable. If you need more lagged variables, just add new lines and add you variable that you need to lag.
 # Observation 2: After proceed with this command bellow open your new data with the lagged variable. 
-# Observation 3: A new panel called "Panel.pd" was created with the lagged variable. Use the View(Panel.pd) bellow and clic in the country to reorder the data. Check the l.tfp. The lag will be added.
+# Observation 3: A new panel called "Panel.pd" was created with the lagged variable. Use the View(Panel.pd) bellow and click in the country column to reorder the data. 
+# Check the l.tfp. The lag will be added.
 # Observation 4: In the following estimates you need to call the Panel.pd, not the data_latin. Use your l.tfp as a dependent variable
 # ###############################################
 
@@ -244,6 +253,7 @@ View(Panel.pd)
 # ###############################################
 # OLS (tfp-1) estimates
 # ###############################################
+# use your: "data = Panel.pd" in each equation bellow to avoid mistakes.
 
 fe1_lag <- plm(log(l.tfp) ~ log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
 fe2_lag <- plm(log(l.tfp) ~ cc + log(healthgdp) + log(gdpcon) + factor(t), data = Panel.pd, index = c("id", "t"),   model="within")
@@ -262,8 +272,10 @@ stargazer(fe4, fe5, fe4_lag, fe5_lag, type="text", digits = 3, omit=c("factor"))
 # ###############################################
 # Other commentaries
 # ###############################################
-# Observation 1: If you want to use your lagged variables ln_tfp that you created you do not need to use  log(tfp). 
-# Of course, results will remain the same.
+# Observation 1: If you want to use your lagged variables that you have created  "ln_tfp" you do not need to use the command log(tfp). 
+# Of course, results will remain the same for both equations "ln_tfp" or log(tfp).
+# This is important once xtsum do not allow to use log(tfp), only your generated variable "ln_tfp". 
+
 fe_test_log <- plm(log(tfp) ~ log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),  model="within")
 fe_test_ln <- plm(ln_tfp ~  ln_healthgdp + ln_gdpcon + factor(t), data = data_latin, index = c("id", "t"),  model="within")
 stargazer(fe_test_log, fe_test_ln, type="text", digits = 3, omit=c("factor"))
