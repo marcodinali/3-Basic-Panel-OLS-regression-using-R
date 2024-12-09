@@ -80,17 +80,6 @@ cor_mat <- corx(data_latin, x = c(ln_tfp, cc, pv, ln_fdigdp, ln_healthgdp, ln_gd
 coef(cor_mat)
 
 # ###############################################
-# Correlation matrix 2 (using apaTables)
-# ###############################################
-
-install.packages("apaTables")
-library(apaTables)
-# For more detail of this package and instructions, please visit: https://cran.r-project.org/web/packages/apaTables/apaTables.pdf
-
-# apa.cor.table(matrix, show.sig.stars = TRUE, show.conf.interval = TRUE, landscape = TRUE, filename="ex.CorTable1.doc")
-# As you can see you can create your filename = "any name.doc" to expor the results.
-
-# ###############################################
 # Variance inflation test (VIF)
 # ###############################################
 install.packages("car")
@@ -133,7 +122,6 @@ library(pbgtest)
 
 modelAR1 <- plm(log(tfp) ~  cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"),   model = "fd")
 pwfdtest(modelAR1, h0 = "fe")
-pdwtest(log(tfp) ~  cc + pv + log(fdigdp) + log(healthgdp) + log(gdpcon), data = data_latin, index = c("id", "t"), model="within")
 
 # Null hypothesis of  Wooldridge, H0: no serial correlation
 # Considering the p-value is lower than 1% (0.01) we can reject the null hypothesis. Therefore, data suffer from serial correlation.
@@ -183,8 +171,6 @@ phtest(fe, re)
 # Panel OLS with fixed effect (fe) 
 # ###############################################
 
-
-
 # Model 1: only control variables
 fe1 <- plm(log(tfp) ~  log(healthgdp) + log(gdpcon) + factor(t), data = data_latin, index = c("id", "t"),   model="within")
 # Model 2: cc only
@@ -215,8 +201,10 @@ stargazer(fe1, fe2, fe3, fe4, fe5, type="text", digits = 3, omit=c("factor"))
 
 install.packages("Hmisc")
 library(Hmisc)
+library(dplyr)
 
 ############################################
+
 Panel <-data_latin %>% arrange(country)
 Panel$tfp <-format(data_latin$tfp, scientific = FALSE)
 Panel$l.tfp <-Lag(data_latin$tfp, + 1)
